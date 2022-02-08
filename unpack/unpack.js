@@ -4,11 +4,11 @@ const fs = require("fs");
 const path = require("path");
 const { DCReader, decrypt } = require("./dc");
 
-const key = "1C01C904FF76FF06C211187E197B5716";
-const iv = "396C342C52A0C12D511DD0209F90CA7D";
+const key = "3B4B9E0D88B1801819192028EB2A2776";
+const iv = "C87DF92745156D0603148F1B5D63F714";
 
 const DCBasePath =
-  "H:\\Steam\\steamapps\\common\\TERA\\Client\\S1Game\\S1Data"; // <- Path to S1Data
+	"H:\\Steam\\steamapps\\common\\TERA\\Client\\S1Game\\S1Data"; // <- Path to S1Data
 const DCLang = "EUR"; // 'USA' for NA
 
 const DCPath = path.join(DCBasePath, `DataCenter_Final_${DCLang}.dat`);
@@ -23,85 +23,85 @@ const files = get_files(DataCenter.Elements.data[0].data[0]);
 
 console.time("im done");
 Object.keys(files).forEach((file) => {
-  if (Array.isArray(files[file])) {
-    console.log(file, `(x${files[file].length})`);
-    for (let n in files[file])
-      fs.writeFileSync(
-        path.join(output, file, `${file}-${n}.json`),
-        JSON.stringify(build(files[file][n]), null, "\t")
-      );
-  } else {
-    console.log(file);
-    fs.writeFileSync(
-      path.join(output, file + ".json"),
-      JSON.stringify(build(files[file]), null, "\t")
-    );
-  }
+	if (Array.isArray(files[file])) {
+		console.log(file, `(x${files[file].length})`);
+		for (let n in files[file])
+			fs.writeFileSync(
+				path.join(output, file, `${file}-${n}.json`),
+				JSON.stringify(build(files[file][n]), null, "\t")
+			);
+	} else {
+		console.log(file);
+		fs.writeFileSync(
+			path.join(output, file + ".json"),
+			JSON.stringify(build(files[file]), null, "\t")
+		);
+	}
 });
 console.timeEnd("im done");
 
 function build(elem) {
-  let obj = {};
+	let obj = {};
 
-  if (elem.attribute_count > 0)
-    for (let i = 0; i < elem.attribute_count; i++) {
-      let ref =
-        DataCenter.Attributes.data[elem.attributes[0]].data[
-          elem.attributes[1] + i
-        ];
-      let key = get_Name(ref);
-      let value =
-        typeof ref.value === "object" ? get_String(ref.value) : ref.value;
-      obj[key] = value;
-    }
+	if (elem.attribute_count > 0)
+		for (let i = 0; i < elem.attribute_count; i++) {
+			let ref =
+				DataCenter.Attributes.data[elem.attributes[0]].data[
+					elem.attributes[1] + i
+				];
+			let key = get_Name(ref);
+			let value =
+				typeof ref.value === "object" ? get_String(ref.value) : ref.value;
+			obj[key] = value;
+		}
 
-  if (elem.children_count > 0)
-    for (let i = 0; i < elem.children_count; i++) {
-      let ref =
-        DataCenter.Elements.data[elem.children[0]].data[elem.children[1] + i];
-      let key = get_Name(ref);
-      if (!obj[key]) obj[key] = [];
-      obj[key].push(build(ref));
-    }
+	if (elem.children_count > 0)
+		for (let i = 0; i < elem.children_count; i++) {
+			let ref =
+				DataCenter.Elements.data[elem.children[0]].data[elem.children[1] + i];
+			let key = get_Name(ref);
+			if (!obj[key]) obj[key] = [];
+			obj[key].push(build(ref));
+		}
 
-  return obj;
+	return obj;
 }
 
 function get_String(ref) {
-  return DataCenter.Strings.map.get(`${ref[0]},${ref[1]}`);
+	return DataCenter.Strings.map.get(`${ref[0]},${ref[1]}`);
 }
 
 function get_Name(ref) {
-  if (ref.name_index === 0) return "__placeholder__";
-  ref = DataCenter.Names.addresses.data[ref.name_index - 1];
-  return DataCenter.Names.map.get(`${ref[0]},${ref[1]}`);
+	if (ref.name_index === 0) return "__placeholder__";
+	ref = DataCenter.Names.addresses.data[ref.name_index - 1];
+	return DataCenter.Names.map.get(`${ref[0]},${ref[1]}`);
 }
 
 function get_files(root) {
-  let child = [];
-  // console.log(get_Name(root), root);
-  for (let i = 0; i < root.children_count; i++) {
-    let ref =
-      DataCenter.Elements.data[root.children[0]].data[root.children[1] + i];
-    child.push({ ref, name: get_Name(ref) });
-  }
+	let child = [];
+	// console.log(get_Name(root), root);
+	for (let i = 0; i < root.children_count; i++) {
+		let ref =
+			DataCenter.Elements.data[root.children[0]].data[root.children[1] + i];
+		child.push({ ref, name: get_Name(ref) });
+	}
 
-  let files = {};
-  for (let n of child) {
-    if (files[n.name]) {
-      if (!Array.isArray(files[n.name])) {
-        if (!fs.existsSync(path.join(output, n.name)))
-          fs.mkdirSync(path.join(output, n.name), { recursive: true });
-        let temp = files[n.name];
-        files[n.name] = [];
-        files[n.name].push(temp);
-      }
-      files[n.name].push(n.ref);
-    } else {
-      files[n.name] = n.ref;
-    }
-  }
+	let files = {};
+	for (let n of child) {
+		if (files[n.name]) {
+			if (!Array.isArray(files[n.name])) {
+				if (!fs.existsSync(path.join(output, n.name)))
+					fs.mkdirSync(path.join(output, n.name), { recursive: true });
+				let temp = files[n.name];
+				files[n.name] = [];
+				files[n.name].push(temp);
+			}
+			files[n.name].push(n.ref);
+		} else {
+			files[n.name] = n.ref;
+		}
+	}
 
-  // fs.writeFileSync(path.join(__dirname, 'unpack.files.json'), JSON.stringify(files, null, '\t'));
-  return files;
+	// fs.writeFileSync(path.join(__dirname, 'unpack.files.json'), JSON.stringify(files, null, '\t'));
+	return files;
 }
